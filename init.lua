@@ -107,12 +107,3 @@ require 'lazy-plugins'
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
-
-require('nvim-treesitter.parsers').get_parser_configs().nu = {
-  install_info = {
-    url = 'https://github.com/nushell/tree-sitter-nu',
-    files = { 'src/parser.c', 'src/scanner.c' }, -- "src/scanner.c" is new
-    branch = 'main',
-  },
-  filetype = 'nu',
-}
