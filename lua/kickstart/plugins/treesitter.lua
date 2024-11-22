@@ -15,20 +15,34 @@ return {
       },
       indent = { enable = true, disable = { 'ruby' } },
     },
+    --config = function(_, opts)
+    -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
+
+    -- Prefer git instead of curl in order to improve connectivity in some environments
+    --require('nvim-treesitter.install').prefer_git = true
+    ---@diagnostic disable-next-line: missing-fields
+    --require('nvim-treesitter.configs').setup(opts)
+
+    -- There are additional nvim-treesitter modules that you can use to interact
+    -- with nvim-treesitter. You should go explore a few and see what interests you:
+    --
+    --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
+    --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
+    --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+    --end,
     config = function(_, opts)
-      -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
-
-      -- Prefer git instead of curl in order to improve connectivity in some environments
-      require('nvim-treesitter.install').prefer_git = true
-      ---@diagnostic disable-next-line: missing-fields
+      local parser_config = require('nvim-treesitter.parsers').get_parser_configs()
+      parser_config.nu = {
+        install_info = {
+          url = '~/src/tree-sitter-nu', -- local path or git repo
+          files = { 'src/parser.c', 'src/scanner.c' }, -- note that some parsers also require src/scanner.c or src/scanner.cc
+          branch = 'main', -- default branch in case of git repo if different from master
+          generate_requires_npm = false, -- if stand-alone parser without npm dependencies
+          requires_generate_from_grammar = false, -- if folder contains pre-generated src/parser.c
+        },
+        filetype = 'nu', -- if filetype does not match the parser name
+      }
       require('nvim-treesitter.configs').setup(opts)
-
-      -- There are additional nvim-treesitter modules that you can use to interact
-      -- with nvim-treesitter. You should go explore a few and see what interests you:
-      --
-      --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
-      --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
-      --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
     end,
     dependencies = { 'nushell/tree-sitter-nu' },
   },
