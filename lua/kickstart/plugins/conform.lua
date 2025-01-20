@@ -27,6 +27,7 @@ return {
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
+        nu = { "topiary_nu" },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
@@ -34,6 +35,12 @@ return {
         -- is found.
         -- javascript = { { "prettierd", "prettier" } },
       },
+      formatters = {
+        topiary_nu = {
+          command = "topiary",
+          args = { "format", "--language", "nu" },
+        },
+      },      
     },
   },
 }
