@@ -193,8 +193,11 @@ return {
         require('lspconfig').nushell.setup {
           cmd = { 'nu', '--lsp' },
           filetypes = { 'nu', 'nuon' },
-          root_dir = require('lspconfig.util').find_get_ancestor,
           single_file_support = true,
+            root_dir = function(fname)
+                return vim.fs.dirname(fname)
+            end,
+            flags = { debounce_text_changes = 1000 },
         },
       }
 
