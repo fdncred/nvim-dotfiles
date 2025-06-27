@@ -62,7 +62,7 @@ vim.opt.scrolloff = 10
 -- for nushell piping
 vim.opt.shell = 'nu'
 vim.opt.shellcmdflag = '--login --stdin --no-newline -c'
-vim.opt.shellredir = 'out+err> %s',
+vim.opt.shellredir = 'out+err> %s'
 vim.opt.shellquote = ''
 vim.opt.shellxquote = ''
 vim.opt.shellxescape = ''
