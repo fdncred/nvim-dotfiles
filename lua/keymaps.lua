@@ -16,6 +16,26 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 -- or just use <C-\><C-n> to exit terminal mode
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
+-- Avoid overlap warnings with mini.nvim textobject/surround maps.
+pcall(vim.keymap.del, 'n', 'gc')
+pcall(vim.keymap.del, 'n', 'gcc')
+pcall(vim.keymap.del, 'x', 'a%')
+pcall(vim.keymap.del, 'x', 'in')
+pcall(vim.keymap.del, 'x', 'an')
+pcall(vim.keymap.del, 'o', 'in')
+pcall(vim.keymap.del, 'o', 'an')
+
+vim.api.nvim_create_autocmd('VimEnter', {
+  group = vim.api.nvim_create_augroup('kickstart-remove-overlap-maps', { clear = true }),
+  callback = function()
+    pcall(vim.keymap.del, 'x', 'a%')
+    pcall(vim.keymap.del, 'x', 'in')
+    pcall(vim.keymap.del, 'x', 'an')
+    pcall(vim.keymap.del, 'o', 'in')
+    pcall(vim.keymap.del, 'o', 'an')
+  end,
+})
+
 -- TIP: Disable arrow keys in normal mode
 -- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
 -- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')

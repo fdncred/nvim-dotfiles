@@ -110,7 +110,7 @@ return {
           --
           -- When you move your cursor, the highlights will be cleared (the second autocommand).
           local client = vim.lsp.get_client_by_id(event.data.client_id)
-          if client and client.supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight) then
+          if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight) then
             local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
             vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
               buffer = event.buf,
@@ -137,7 +137,7 @@ return {
           -- code, if the language server you are using supports them
           --
           -- This may be unwanted, since they displace some of your code
-          if client and client.supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint) then
+          if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint) then
             map('<leader>th', function()
               vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
             end, '[T]oggle Inlay [H]ints')
@@ -151,6 +151,31 @@ return {
       --  So, we create new capabilities with nvim cmp, and then broadcast that to the servers.
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
+      local is_windows = vim.fn.has 'win32' == 1
+
+      local find_first_executable = function(candidates)
+        for _, candidate in ipairs(candidates) do
+          if candidate:find('[/\\]') then
+            if vim.fn.filereadable(candidate) == 1 then
+              return candidate
+            end
+          elseif vim.fn.executable(candidate) == 1 then
+            return candidate
+          end
+        end
+      end
+
+      local lua_ls_cmd = find_first_executable {
+        vim.fn.stdpath 'data' .. '/lsp-servers/lua-language-server/bin/lua-language-server',
+        vim.fn.stdpath 'data' .. '/lsp-servers/lua-language-server/bin/lua-language-server.exe',
+        vim.fn.stdpath 'data' .. '/lsp-servers/lua-language-server/lua-language-server',
+        vim.fn.stdpath 'data' .. '/lsp-servers/lua-language-server/lua-language-server.exe',
+        vim.fn.stdpath 'data' .. '/mason-packages/packages/lua-language-server/bin/lua-language-server',
+        vim.fn.stdpath 'data' .. '/mason-packages/packages/lua-language-server/bin/lua-language-server.exe',
+        vim.fn.stdpath 'data' .. '/mason/packages/lua-language-server/bin/lua-language-server',
+        vim.fn.stdpath 'data' .. '/mason/packages/lua-language-server/bin/lua-language-server.exe',
+        'lua-language-server',
+      }
 
       -- Enable the following language servers
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
@@ -176,6 +201,7 @@ return {
         --
 
         lua_ls = {
+          cmd = lua_ls_cmd and { lua_ls_cmd } or nil,
           -- cmd = {...},
           -- filetypes = { ...},
           -- capabilities = {},
@@ -190,16 +216,36 @@ return {
           },
         },
 
-        require('lspconfig').nushell.setup {
-          cmd = { 'nu', '--lsp' },
-          filetypes = { 'nu', 'nuon' },
-          single_file_support = true,
-            root_dir = function(fname)
-                return vim.fs.dirname(fname)
-            end,
-            flags = { debounce_text_changes = 1000 },
-        },
       }
+
+      servers.nushell = {
+        cmd = { 'nu', '--lsp' },
+        filetypes = { 'nu', 'nuon' },
+        single_file_support = true,
+        root_dir = function(arg, on_dir)
+          local cwd = (vim.uv or vim.loop).cwd()
+          local path = arg
+
+          if type(path) == 'number' then
+            path = vim.api.nvim_buf_get_name(path)
+          end
+
+          local dir = (type(path) == 'string' and path ~= '') and vim.fs.dirname(path) or cwd
+
+          if type(on_dir) == 'function' then
+            on_dir(dir)
+            return
+          end
+
+          return dir
+        end,
+        flags = { debounce_text_changes = 1000 },
+      }
+
+      -- mason-lspconfig does not currently provide a registry package for nushell,
+      -- so configure it separately while keeping shared capabilities.
+      local nushell_server = servers.nushell
+      servers.nushell = nil
 
       -- Ensure the servers and tools above are installed
       --  To check the current status of installed tools and/or manually install
@@ -207,28 +253,50 @@ return {
       --    :Mason
       --
       --  You can press `g?` for help in this menu.
-      require('mason').setup()
+      local mason_opts = {
+        max_concurrent_installers = 1,
+      }
+      if is_windows then
+        -- Use a dedicated install root to avoid stale/locked directories on Windows.
+        mason_opts.install_root_dir = vim.fn.stdpath 'data' .. '/mason-packages'
+      end
+      require('mason').setup(mason_opts)
 
       -- You can add other tools here that you want Mason to install
       -- for you, so that they are available from within Neovim.
-      local ensure_installed = vim.tbl_keys(servers or {})
+      local ensure_installed = vim.tbl_filter(function(name)
+        return name ~= 'lua_ls'
+      end, vim.tbl_keys(servers or {}))
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
-        handlers = {
-          function(server_name)
-            local server = servers[server_name] or {}
-            -- This handles overriding only values explicitly passed
-            -- by the server configuration above. Useful when disabling
-            -- certain features of an LSP (for example, turning off formatting for tsserver)
-            server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-            require('lspconfig')[server_name].setup(server)
-          end,
-        },
+        automatic_enable = false,
       }
+
+      local setup_lsp_server = function(server_name, server)
+        if vim.lsp.config and vim.lsp.enable then
+          vim.lsp.config(server_name, server)
+          vim.lsp.enable(server_name)
+          return
+        end
+        require('lspconfig')[server_name].setup(server)
+      end
+
+      for server_name, server in pairs(servers) do
+        -- This handles overriding only values explicitly passed
+        -- by the server configuration above. Useful when disabling
+        -- certain features of an LSP (for example, turning off formatting for tsserver)
+        server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+        setup_lsp_server(server_name, server)
+      end
+
+      if nushell_server then
+        nushell_server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, nushell_server.capabilities or {})
+        setup_lsp_server('nushell', nushell_server)
+      end
     end,
   },
 }

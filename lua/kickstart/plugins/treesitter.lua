@@ -2,6 +2,17 @@ return {
   {
       "nvim-treesitter/nvim-treesitter",
       config = function()
+          local uv = vim.uv or vim.loop
+          if vim.fn.has "win32" == 1 and vim.treesitter.language and vim.treesitter.language.add then
+              local custom_nu_parser = vim.fn.expand "$LOCALAPPDATA" .. "/tree-sitter/lib/nu.dll"
+              if uv.fs_stat(custom_nu_parser) then
+                  local ok, err = vim.treesitter.language.add("nu", { path = custom_nu_parser })
+                  if not ok and err then
+                      vim.notify("Failed to load custom Nu parser: " .. err, vim.log.levels.WARN)
+                  end
+              end
+          end
+
           require("nvim-treesitter.configs").setup {
               ensure_installed = { "nu" }, -- Ensure the "nu" parser is installed
               highlight = {

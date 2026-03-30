@@ -24,8 +24,12 @@ If you are experiencing issues, please make sure you have the latest versions.
 ### Install External Dependencies
 
 External Requirements:
-- Basic utils: `git`, `make`, `unzip`, C Compiler (`gcc`)
+- Basic utils: `git`, `unzip`
 - [ripgrep](https://github.com/BurntSushi/ripgrep#installation)
+- [Nushell](https://www.nushell.sh/) (`nu`) for shell integration and Nushell LSP
+- [CMake](https://cmake.org/) for `telescope-fzf-native` builds
+- Optional: [Topiary](https://topiary.tweag.io/) for Nushell formatting
+- Optional build tools: `make`, C Compiler (`gcc`)
 - Clipboard tool (xclip/xsel/win32yank or other depending on platform)
 - A [Nerd Font](https://www.nerdfonts.com/): optional, provides various icons
   - if you have it set `vim.g.have_nerd_font` in `init.lua` to true
@@ -152,7 +156,7 @@ After installing all the dependencies continue with the [Install Kickstart](#Ins
 #### Windows Installation
 
 <details><summary>Windows with Microsoft C++ Build Tools and CMake</summary>
-Installation may require installing build tools and updating the run command for `telescope-fzf-native`
+Installation may require installing build tools and updating the build command for `telescope-fzf-native`
 
 See `telescope-fzf-native` documentation for [more details](https://github.com/nvim-telescope/telescope-fzf-native.nvim#installation)
 
@@ -178,7 +182,7 @@ winget install --accept-source-agreements chocolatey.chocolatey
 2. install all requirements using choco, exit previous cmd and
 open a new one so that choco path is set, and run in cmd as **admin**:
 ```
-choco install -y neovim git ripgrep wget fd unzip gzip mingw make
+choco install -y neovim git ripgrep wget fd unzip gzip mingw make cmake nushell
 ```
 </details>
 <details><summary>WSL (Windows Subsystem for Linux)</summary>

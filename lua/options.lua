@@ -5,6 +5,9 @@
 
 -- Make line numbers default
 vim.opt.number = true
+
+-- Enable true color support in the TUI
+vim.opt.termguicolors = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
 -- vim.opt.relativenumber = true
@@ -59,7 +62,7 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
 
--- for nushell piping
+-- Configure Nushell integration.
 vim.opt.shell = 'nu'
 vim.opt.shellcmdflag = '--login --stdin --no-newline -c'
 vim.opt.shellredir = 'out+err> %s'
