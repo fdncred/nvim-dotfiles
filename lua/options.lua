@@ -62,6 +62,14 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
 
+-- Register Nushell-related filetypes so LSP health checks recognize them.
+vim.filetype.add {
+	extension = {
+		nu = 'nu',
+		nuon = 'nuon',
+	},
+}
+
 -- Configure Nushell integration.
 vim.opt.shell = 'nu'
 vim.opt.shellcmdflag = '--login --stdin --no-newline -c'
