@@ -70,6 +70,17 @@ require('lazy').setup({
     enabled = false,
     hererocks = false,
   },
+  performance = {
+    rtp = {
+      disabled_plugins = {
+        'gzip',
+        'tarPlugin',
+        'tohtml',
+        'tutor',
+        'zipPlugin',
+      },
+    },
+  },
   ui = {
     -- If you are using a Nerd Font: set icons to an empty table which will use the
     -- default lazy.nvim defined Nerd Font icons, otherwise define a unicode icons table

@@ -1,6 +1,7 @@
 return {
   {
       "nvim-treesitter/nvim-treesitter",
+    event = { "BufReadPost", "BufNewFile" },
       config = function()
           local uv = vim.uv or vim.loop
           local ok_parsers, parsers = pcall(require, "nvim-treesitter.parsers")
