@@ -77,14 +77,21 @@ return {
               )
           end
 
+          local function nu_highlight_query_ok()
+              if not nu_parser_ready then
+                  return false
+              end
+              return pcall(vim.treesitter.query.get, "nu", "highlights")
+          end
+
           require("nvim-treesitter.configs").setup {
               ensure_installed = { "nu" }, -- Ensure the "nu" parser is installed
               highlight = {
                   enable = true,            -- Enable syntax highlighting
-                  -- Prevent startup crashes when parser creation fails.
+                  -- Prevent startup crashes when parser creation fails or if the Nushell highlight query is invalid.
                   disable = function(lang)
                       if lang == "nu" then
-                          return not nu_parser_ready
+                          return not nu_highlight_query_ok()
                       end
                       return false
                   end,
